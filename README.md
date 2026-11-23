@@ -30,7 +30,7 @@ npm run build
 
 ## CI and releases
 
-`.github/workflows/ci.yml` runs the tests and the build on every push to `main` and on pull requests.
+`.github/workflows/ci.yml` runs the tests and the build on every push to `main` and on pull requests, and uploads the built `dist/` as the `pdf-flipbook-reader` artifact.
 
 Releases are created by hand (GitHub web UI or `gh release create v0.1.0 --generate-notes`), with the tag matching `version` in `package.json`. Publishing a release triggers CI, which attaches `pdf-flipbook-reader.zip` (the built `dist/`) to it.
 
