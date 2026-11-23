@@ -18,6 +18,7 @@
 - `src/download.js` download of the loaded PDF
 - `src/reader.css` styles, `src/textlayer.css` PDF.js text layer styles
 - `test/reader.spec.js` Playwright tests, `test/tracemonkey.pdf` sample PDF (from PDF.js)
+- `.github/workflows/ci.yml` tests and builds on push/PR; on a published release attaches the zipped `dist/`
 - `vite.config.js` copies PDF.js cmaps, fonts and wasm from `node_modules` to `public/pdfjs/` (generated, ignored)
 
 ## Check

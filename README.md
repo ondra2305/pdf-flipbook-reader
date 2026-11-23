@@ -26,7 +26,36 @@ Playwright starts the dev server itself and runs `test/reader.spec.js` against `
 npm run build
 ```
 
-Copy `dist/` to the site, e.g. `web/libraries/pdf-flipbook-reader/`. `npm run preview` serves the build locally.
+`dist/` is a self-contained static folder; copy it to any web server. `npm run preview` serves the build locally.
+
+## CI and releases
+
+`.github/workflows/ci.yml` runs the tests and the build on every push to `main` and on pull requests.
+
+Releases are created by hand (GitHub web UI or `gh release create v0.1.0 --generate-notes`), with the tag matching `version` in `package.json`. Publishing a release triggers CI, which attaches `pdf-flipbook-reader.zip` (the built `dist/`) to it.
+
+## Install via Composer (Drupal)
+
+In the site's `composer.json`, with `drupal-library` mapped to `web/libraries/{$name}` in `installer-paths`:
+
+```json
+"repositories": [
+  {
+    "type": "package",
+    "package": {
+      "name": "ondra2305/pdf-flipbook-reader",
+      "version": "0.1.0",
+      "type": "drupal-library",
+      "dist": {
+        "url": "https://github.com/ondra2305/pdf-flipbook-reader/releases/download/v0.1.0/pdf-flipbook-reader.zip",
+        "type": "zip"
+      }
+    }
+  }
+]
+```
+
+Then `composer require ondra2305/pdf-flipbook-reader:0.1.0`. For a new release, bump the version in both places.
 
 ## Embed
 

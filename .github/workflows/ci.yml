@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps --only-shell chromium
+      - run: npm test
+      - run: npm run build
+      - if: github.event_name == 'release'
+        run: |
+          cp LICENSE dist/
+          (cd dist && zip -r ../pdf-flipbook-reader.zip .)
+          gh release upload "${{ github.event.release.tag_name }}" pdf-flipbook-reader.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
