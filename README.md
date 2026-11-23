@@ -2,6 +2,8 @@
 
 Page-flip PDF reader (PDF.js + StPageFlip) built as a static page and embedded via iframe.
 
+Demo: https://ondra2305.github.io/pdf-flipbook-reader/
+
 ## Development
 
 ```sh
@@ -30,7 +32,7 @@ npm run build
 
 ## CI and releases
 
-`.github/workflows/ci.yml` runs the tests and the build on every push to `main` and on pull requests, and uploads the built `dist/` as the `pdf-flipbook-reader` artifact.
+`.github/workflows/ci.yml` runs the tests and the build on every push to `main` and on pull requests, and uploads the built `dist/` as the `pdf-flipbook-reader` artifact. Pushes to `main` also deploy the demo to GitHub Pages: `demo/index.html` embedding the build from `reader/` with `test/tracemonkey.pdf`.
 
 Releases are created by hand (GitHub web UI or `gh release create v0.1.0 --generate-notes`), with the tag matching `version` in `package.json`. Publishing a release triggers CI, which attaches `pdf-flipbook-reader.zip` (the built `dist/`) to it.
 
@@ -79,7 +81,9 @@ Colors and radius: override the `--kf-*` variables in `src/reader.css`.
 ## Server requirements
 
 - `.mjs` served as `text/javascript`, `.wasm` as `application/wasm` (`.htaccess` covers Apache; nginx ignores it).
-- PDFs served with HTTP Range support, otherwise the whole file is downloaded before the first page shows.
+- PDFs served with HTTP Range support and an `Accept-Ranges: bytes` header, otherwise the whole file is downloaded before the first page shows. Check with `curl -I <pdf url>`. The Vite dev and preview servers do not send it.
+- `.js`, `.mjs` and `.css` compressed (gzip or brotli); the first visit then loads about 520 KB of code.
+- `assets/` cached long-term (e.g. `Cache-Control: public, max-age=31536000, immutable`); file names contain a content hash, so repeat visits only load the PDF.
 
 ## License
 

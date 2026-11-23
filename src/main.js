@@ -45,7 +45,7 @@ async function open() {
   const onDemand = params.get('prefetch') !== '1';
   const pdf = await getDocument({
     url: pdfParam,
-    rangeChunkSize: 1024 * 1024,
+    rangeChunkSize: 256 * 1024,
     wasmUrl: assetUrl('pdfjs/wasm/'),
     iccUrl: assetUrl('pdfjs/iccs/'),
     cMapUrl: assetUrl('pdfjs/cmaps/'),

@@ -1,6 +1,6 @@
 import { TextLayer } from 'pdfjs-dist';
 
-const LOOKAHEAD = 5;
+const LOOKAHEAD = matchMedia('(pointer: coarse)').matches ? 3 : 5;
 const KEEP_BEHIND = 4;
 const CONCURRENCY = 2;
 
