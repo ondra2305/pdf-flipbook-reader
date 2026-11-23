@@ -1,8 +1,12 @@
-import { cpSync } from 'node:fs';
+import { cpSync, rmSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
-for (const dir of ['cmaps', 'standard_fonts', 'wasm']) {
-  cpSync(`node_modules/pdfjs-dist/${dir}`, `public/pdfjs/${dir}`, { recursive: true });
+rmSync('public/pdfjs', { recursive: true, force: true });
+for (const dir of ['cmaps', 'iccs', 'standard_fonts', 'wasm']) {
+  cpSync(`node_modules/pdfjs-dist/${dir}`, `public/pdfjs/${dir}`, {
+    recursive: true,
+    filter: (src) => !src.includes('quickjs'),
+  });
 }
 
 export default defineConfig({

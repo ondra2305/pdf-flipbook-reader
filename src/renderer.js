@@ -1,9 +1,10 @@
 import { TextLayer } from 'pdfjs-dist';
 
 const LOOKAHEAD = 5;
+const KEEP_BEHIND = 4;
 const CONCURRENCY = 2;
 
-export function createRenderer({ pdf, canvases, textLayer, onError }) {
+export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
   const done = new Set();
   const queue = [];
   const queued = new Set();
@@ -12,6 +13,7 @@ export function createRenderer({ pdf, canvases, textLayer, onError }) {
   let paused = false;
   let targetW = 800;
   let displayPageW = 400;
+  let generation = 0;
 
   function enqueue(n, urgent) {
     if (done.has(n) || queued.has(n) || inFlight.has(n)) return;
@@ -46,19 +48,25 @@ export function createRenderer({ pdf, canvases, textLayer, onError }) {
     const page = await pdf.getPage(n);
     const base = page.getViewport({ scale: 1 });
     const canvas = canvases[n - 1];
-    if (canvas.width !== targetW) {
-      canvas.width = targetW;
-      canvas.height = Math.round((targetW * base.height) / base.width);
-    }
+    let drawnFor;
+    do {
+      drawnFor = generation;
+      await paint(page, base, canvas);
+      if (textLayer) await drawText(page, base, canvas.parentElement);
+    } while (drawnFor !== generation);
+    done.add(n);
+  }
+
+  async function paint(page, base, canvas) {
+    canvas.width = targetW;
+    canvas.height = Math.round((targetW * base.height) / base.width);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: targetW / base.width }) }).promise;
-    done.add(n);
-    if (textLayer) await drawText(page, canvas.parentElement, displayPageW / base.width);
   }
 
-  async function drawText(page, pageEl, scale) {
+  async function drawText(page, base, pageEl) {
     let layer = pageEl.querySelector('.textLayer');
     if (!layer) {
       layer = document.createElement('div');
@@ -69,6 +77,7 @@ export function createRenderer({ pdf, canvases, textLayer, onError }) {
       }
       pageEl.appendChild(layer);
     }
+    const scale = Math.min(displayPageW / base.width, displayPageW / aspect / base.height);
     layer.replaceChildren();
     layer.style.setProperty('--total-scale-factor', scale);
     await new TextLayer({
@@ -78,10 +87,17 @@ export function createRenderer({ pdf, canvases, textLayer, onError }) {
     }).render();
   }
 
+  function free(n) {
+    canvases[n - 1].width = 1;
+    canvases[n - 1].height = 1;
+    done.delete(n);
+  }
+
   function ensureAround(index) {
     const count = canvases.length;
-    for (const n of [index + 1, Math.min(count, index + 2)]) enqueue(n, true);
     const to = Math.min(count, index + 2 + LOOKAHEAD);
+    for (const n of done) if (n < index - KEEP_BEHIND || n > to) free(n);
+    for (const n of [index + 1, Math.min(count, index + 2)]) enqueue(n, true);
     for (let n = Math.max(1, index - 2); n <= to; n++) enqueue(n, false);
   }
 
@@ -91,8 +107,8 @@ export function createRenderer({ pdf, canvases, textLayer, onError }) {
     displayPageW = displayWidth;
     if (!changed) return false;
     targetW = width;
-    for (const n of done) canvases[n - 1].width = 1;
-    done.clear();
+    generation++;
+    for (const n of done) free(n);
     queued.clear();
     queue.length = 0;
     return true;

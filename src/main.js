@@ -27,22 +27,32 @@ function fail(message) {
 
 const assetUrl = (path) => new URL(path, location.href).href;
 
+function baseName(url) {
+  const name = url.split('?')[0].split('/').pop();
+  try {
+    return decodeURIComponent(name);
+  } catch {
+    return name;
+  }
+}
+
 async function open() {
   if (new URL(pdfParam, location.href).origin !== location.origin) throw new Error(t('badOrigin'));
-  const fileName = pdfParam.split('?')[0].split('/').pop();
-  document.title = fileName || document.title;
+  const fileName = params.get('filename') || baseName(pdfParam) || 'document.pdf';
+  document.title = fileName;
   statusEl.textContent = t('loading');
 
   const onDemand = params.get('prefetch') !== '1';
   const pdf = await getDocument({
     url: pdfParam,
+    rangeChunkSize: 1024 * 1024,
     wasmUrl: assetUrl('pdfjs/wasm/'),
+    iccUrl: assetUrl('pdfjs/iccs/'),
     cMapUrl: assetUrl('pdfjs/cmaps/'),
     cMapPacked: true,
     standardFontDataUrl: assetUrl('pdfjs/standard_fonts/'),
     disableAutoFetch: onDemand,
     disableStream: onDemand,
-    isEvalSupported: false,
   }).promise;
   const first = (await pdf.getPage(1)).getViewport({ scale: 1 });
 
@@ -63,6 +73,7 @@ async function open() {
   const renderer = createRenderer({
     pdf,
     canvases: book.canvases,
+    aspect: book.aspect,
     textLayer: params.get('tl') !== '0',
     onError: (n, err) => fail(t('renderPage', n, err)),
   });
@@ -87,7 +98,7 @@ async function open() {
     zoomOut: view.zoomOut,
     zoomFit: view.zoomReset,
     fs: view.toggleFullscreen,
-    download: () => downloadPdf(pdf, decodeURIComponent(fileName || 'document.pdf'))
+    download: () => downloadPdf(pdf, fileName)
       .catch((err) => fail(t('downloadFail', err.message))),
     lang: () => {
       params.set('lang', lang === 'cs' ? 'en' : 'cs');
@@ -95,9 +106,10 @@ async function open() {
     },
   });
   if (params.get('dl') === '0') document.getElementById('download').style.display = 'none';
+  if (!document.fullscreenEnabled) document.getElementById('fs').style.display = 'none';
 
   await renderer.render(1);
-  await renderer.render(2);
+  if (pdf.numPages > 1) await renderer.render(2);
   view.fit();
   updatePage();
   window.__POC_READY__ = { numPages: pdf.numPages, pageIndex: book.current() };

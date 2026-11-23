@@ -18,7 +18,7 @@ npx playwright install chromium
 npm test
 ```
 
-Playwright starts the dev server itself and runs `test/reader.spec.js` against `test/tracemonkey.pdf`.
+Playwright starts the dev server itself and runs `test/reader.spec.js` against the PDFs in `test/`.
 
 ## Build
 
@@ -71,6 +71,7 @@ Then `composer require ondra2305/pdf-flipbook-reader:0.1.0`. For a new release, 
 | `lang` | `cs` | `en` |
 | `dl` | `1` | `0` hides the download button |
 | `tl` | `1` | `0` disables the text layer |
+| `filename` | from `pdf` URL | download name and page title |
 | `prefetch` | `0` | `1` downloads the whole PDF in the background |
 
 Colors and radius: override the `--kf-*` variables in `src/reader.css`.
