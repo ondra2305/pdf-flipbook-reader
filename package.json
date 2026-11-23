@@ -1,0 +1,22 @@
+{
+  "name": "pdf-flipbook-reader",
+  "version": "0.1.0",
+  "description": "Page-flip PDF reader for embedding via iframe",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "page-flip": "2.0.7",
+    "pdfjs-dist": "6.4.299"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "vite": "^8.3.8"
+  }
+}

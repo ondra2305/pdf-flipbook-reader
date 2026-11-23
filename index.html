@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reader</title>
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+  <div id="stage">
+    <div id="viewport">
+      <div id="sizer">
+        <div id="book"></div>
+      </div>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <div id="toolbar">
+    <button id="prev" class="btn icon-only" type="button" data-title="prevTitle"><span data-icon="prev"></span></button>
+    <span id="pageLabel">– / –</span>
+    <button id="next" class="btn icon-only" type="button" data-title="nextTitle"><span data-icon="next"></span></button>
+    <span class="sep"></span>
+    <button id="zoomOut" class="btn icon-only" type="button" data-title="zoomOut"><span data-icon="zoomOut"></span></button>
+    <span id="zoomLabel">100%</span>
+    <button id="zoomIn" class="btn icon-only" type="button" data-title="zoomIn"><span data-icon="zoomIn"></span></button>
+    <button id="zoomFit" class="btn" type="button" data-title="zoomFitTitle"><span data-icon="fit"></span><span class="lbl" data-text="zoomFit"></span><span class="lbl-short" data-text="zoomFitShort"></span></button>
+    <span class="sep"></span>
+    <button id="download" class="btn" type="button" data-title="downloadTitle"><span data-icon="download"></span><span class="lbl" data-text="download"></span></button>
+    <button id="fs" class="btn" type="button" data-title="fullscreenTitle"><span data-icon="fs"></span><span class="lbl" data-text="fullscreen"></span></button>
+    <button id="lang" class="btn" type="button" data-title="langToggleTitle" data-text="langToggle"></button>
+  </div>
+
+  <div id="error"></div>
+</body>
+</html>

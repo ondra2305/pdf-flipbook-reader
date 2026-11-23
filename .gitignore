@@ -1,0 +1,8 @@
+node_modules/
+dist/
+public/pdfjs/
+*.pdf
+!test/*.pdf
+test-results/
+playwright-report/
+.idea

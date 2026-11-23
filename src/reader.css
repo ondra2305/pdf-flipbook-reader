@@ -1,0 +1,59 @@
+:root {
+  --kf-bg: #1b1b1f;
+  --kf-panel: #26262c;
+  --kf-btn: #3a3a44;
+  --kf-btn-hover: #4a4a56;
+  --kf-fg: #e8e8ea;
+  --kf-muted: #9a9aa2;
+  --kf-radius: 6px;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  margin: 0; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--kf-bg); color: var(--kf-fg); font: 14px/1.4 system-ui, sans-serif;
+}
+#stage { flex: 1; min-height: 0; position: relative; display: flex; padding: 12px; }
+#viewport { flex: 1; overflow: hidden; display: flex; }
+#sizer { position: relative; margin: auto; }
+#book { width: 100%; height: 100%; visibility: hidden; }
+#book.stf-ready { visibility: visible; }
+.page { background: #fff; }
+.page canvas { display: block; width: 100%; height: 100%; }
+.stf__item { will-change: transform; }
+.textLayer { pointer-events: none; }
+.textLayer :is(span, br) { pointer-events: auto; }
+
+#toolbar {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  gap: 6px; padding: 8px; background: var(--kf-panel);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 32px; padding: 6px 10px; border: 0; border-radius: var(--kf-radius);
+  background: var(--kf-btn); color: var(--kf-fg); font: inherit; cursor: pointer;
+}
+.btn:hover { background: var(--kf-btn-hover); }
+.btn.icon-only { padding: 6px 8px; }
+.btn svg { width: 16px; height: 16px; display: block; }
+.btn .lbl-short { display: none; }
+#pageLabel, #zoomLabel {
+  font-variant-numeric: tabular-nums; font-size: 13px; color: var(--kf-muted); text-align: center;
+}
+#pageLabel { min-width: 7ch; }
+#zoomLabel { min-width: 4ch; }
+.sep { width: 1px; height: 20px; background: var(--kf-btn-hover); }
+
+#status {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgb(0 0 0 / .6); z-index: 10; pointer-events: none;
+}
+#status.hidden { display: none; }
+#error { position: fixed; inset: auto 0 60px; color: #ff8a80; text-align: center; white-space: pre-wrap; z-index: 20; }
+
+@media (max-width: 640px) {
+  .btn { min-width: 44px; min-height: 42px; }
+  .btn .lbl, .sep { display: none; }
+  .btn .lbl-short { display: inline; font-size: 12px; }
+  #pageLabel { min-width: 7ch; }
+}
