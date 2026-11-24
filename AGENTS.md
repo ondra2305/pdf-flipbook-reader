@@ -17,8 +17,8 @@
 - `src/toolbar.js` icons, labels, buttons and keyboard shortcuts
 - `src/download.js` download of the loaded PDF
 - `src/reader.css` styles, `src/textlayer.css` PDF.js text layer styles
-- `test/reader.spec.js` Playwright tests, `test/tracemonkey.pdf` sample PDF (from PDF.js), `test/one-page.pdf` and `test/mixed-sizes.pdf` edge-case fixtures
-- `.github/workflows/ci.yml` tests and builds on push/PR; on push to `main` deploys the GitHub Pages demo; on a published release attaches the zipped `dist/`
+- `test/reader.spec.js` Playwright tests, `test/tracemonkey.pdf` sample PDF (from PDF.js), `test/one-page.pdf`, `test/mixed-sizes.pdf` and `test/titled.pdf` (metadata title) edge-case fixtures
+- `.github/workflows/ci.yml` tests and builds on push/PR; on push to `main` deploys the GitHub Pages demo; on a published release attaches the zipped `dist/` as `pdf-flipbook-reader.zip`; release tag `vX.Y.Z` must match `version` in `package.json` and the README's Composer example
 - `demo/index.html` Pages demo page embedding the reader in an iframe
 - `vite.config.js` copies PDF.js cmaps, fonts and wasm from `node_modules` to `public/pdfjs/` (generated, ignored)
 

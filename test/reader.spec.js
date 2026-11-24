@@ -56,6 +56,14 @@ test('downloads the loaded PDF', async ({ page }) => {
   expect(download.suggestedFilename()).toBe('tracemonkey.pdf');
 });
 
+test('takes the page title from the PDF metadata, else the file name', async ({ page }) => {
+  await open(page, '', '/test/titled.pdf');
+  await expect(page).toHaveTitle('Annual Report 2026');
+  await open(page, '', '/test/one-page.pdf');
+  await page.waitForTimeout(300);
+  await expect(page).toHaveTitle('one-page.pdf');
+});
+
 test('uses the filename parameter for title and download', async ({ page }) => {
   await open(page, '&filename=Issue%2012.pdf');
   await expect(page).toHaveTitle('Issue 12.pdf');
@@ -166,6 +174,9 @@ test('explains a missing or invalid PDF', async ({ page }) => {
   await page.route((url) => url.pathname === '/missing.pdf', (route) => route.fulfill({ status: 404 }));
   await page.goto('/?pdf=/missing.pdf');
   await expect(page.locator('#error')).toHaveText('Chyba: Dokument nebyl nalezen.');
+  await page.route((url) => url.pathname === '/paid.pdf', (route) => route.fulfill({ status: 403 }));
+  await page.goto('/?pdf=/paid.pdf');
+  await expect(page.locator('#error')).toHaveText('Chyba: K tomuto dokumentu nemáte přístup.');
   await page.goto('/?pdf=/index.html&lang=en');
   await expect(page.locator('#error')).toHaveText('Error: The file is not a valid PDF.');
 });

@@ -54,6 +54,11 @@ async function open() {
     disableAutoFetch: onDemand,
     disableStream: onDemand,
   }).promise;
+  pdf.getMetadata().then(({ info, metadata }) => {
+    // Ghostscript writes "Untitled" when the source has no title
+    const title = [metadata?.get('dc:title'), info?.Title].map((s) => s?.trim()).find((s) => s && s !== 'Untitled');
+    if (title) document.title = title;
+  }).catch(() => {});
   const first = (await pdf.getPage(1)).getViewport({ scale: 1 });
 
   const book = createBook(document.getElementById('book'), {
@@ -124,7 +129,10 @@ renderToolbar(t);
 document.documentElement.classList.add('ready');
 function describe(err) {
   if (err instanceof InvalidPDFException) return t('notPdf');
-  if (err instanceof ResponseException) return err.missing ? t('notFound') : t('serverError', err.status);
+  if (err instanceof ResponseException) {
+    if (err.missing) return t('notFound');
+    return err.status === 401 || err.status === 403 ? t('noAccess') : t('serverError', err.status);
+  }
   return err.message || String(err);
 }
 
