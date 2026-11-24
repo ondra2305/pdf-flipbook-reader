@@ -3,7 +3,7 @@ import { MIN_PAGE_W } from './book.js';
 const ZOOM_STEPS = [1, 1.5, 2, 3];
 const STAGE_PADDING = 24;
 
-export function createViewport({ aspect, onFit, onResize }) {
+export function createViewport({ aspect, single, onFit, onResize }) {
   const stage = document.getElementById('stage');
   const viewport = document.getElementById('viewport');
   const sizer = document.getElementById('sizer');
@@ -15,7 +15,7 @@ export function createViewport({ aspect, onFit, onResize }) {
     const box = stage.getBoundingClientRect();
     const availW = box.width - STAGE_PADDING;
     const availH = box.height - STAGE_PADDING;
-    const pagesAcross = availW < 2 * MIN_PAGE_W ? 1 : 2;
+    const pagesAcross = single || availW < 2 * MIN_PAGE_W ? 1 : 2;
     const shownW = Math.floor(Math.min(availW, availH * pagesAcross * aspect));
     const pageW = shownW / pagesAcross;
     // StPageFlip draws hard pages at top 0, so the book must not be taller than a page

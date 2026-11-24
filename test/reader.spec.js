@@ -66,6 +66,12 @@ test('uses the filename parameter for title and download', async ({ page }) => {
 test('opens a single-page PDF', async ({ page }) => {
   const errors = await open(page, '', '/test/one-page.pdf');
   await expect(page.locator('#pageLabel')).toHaveText('1 / 1');
+  const stage = await page.locator('#stage').boundingBox();
+  const sheet = await page.locator('#book .page').boundingBox();
+  expect(Math.abs(sheet.x + sheet.width / 2 - (stage.x + stage.width / 2))).toBeLessThanOrEqual(2);
+  await page.keyboard.press('ArrowRight');
+  await page.click('#zoomIn');
+  await expect(page.locator('#pageLabel')).toHaveText('1 / 1');
   await expect(page.locator('#error')).toBeEmpty();
   expect(errors).toEqual([]);
 });
@@ -154,6 +160,14 @@ test('hides the unstyled page until the script has run', async ({ page }) => {
   await expect(page.locator('#toolbar')).toBeHidden();
   release();
   await expect(page.locator('#toolbar')).toBeVisible();
+});
+
+test('explains a missing or invalid PDF', async ({ page }) => {
+  await page.route((url) => url.pathname === '/missing.pdf', (route) => route.fulfill({ status: 404 }));
+  await page.goto('/?pdf=/missing.pdf');
+  await expect(page.locator('#error')).toHaveText('Chyba: Dokument nebyl nalezen.');
+  await page.goto('/?pdf=/index.html&lang=en');
+  await expect(page.locator('#error')).toHaveText('Error: The file is not a valid PDF.');
 });
 
 test('rejects a missing or foreign PDF', async ({ page }) => {

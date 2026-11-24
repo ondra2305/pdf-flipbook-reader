@@ -12,6 +12,7 @@
     "test": "playwright test"
   },
   "dependencies": {
+    "lucide": "1.79.0",
     "page-flip": "2.0.7",
     "pdfjs-dist": "6.4.299"
   },

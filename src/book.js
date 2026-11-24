@@ -18,6 +18,13 @@ export function createBook(el, { pageCount, pageWidth, pageHeight, magazine, onT
     canvases.push(canvas);
   }
   el.append(...canvases.map((canvas) => canvas.parentElement));
+  const aspect = BASE_W / height;
+
+  if (pageCount === 1) {
+    canvases[0].parentElement.style.cssText = 'position: relative; width: 100%; height: 100%';
+    el.classList.add('stf-ready');
+    return { canvases, aspect, current: () => 0, update() {}, next() {}, prev() {} };
+  }
 
   const pageFlip = new PageFlip(el, {
     width: BASE_W,
@@ -62,7 +69,7 @@ export function createBook(el, { pageCount, pageWidth, pageHeight, magazine, onT
 
   return {
     canvases,
-    aspect: BASE_W / height,
+    aspect,
     current: () => pageFlip.getCurrentPageIndex(),
     update: () => pageFlip.update(),
     next() {

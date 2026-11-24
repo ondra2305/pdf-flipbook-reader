@@ -1,4 +1,4 @@
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import { getDocument, GlobalWorkerOptions, InvalidPDFException, ResponseException } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import './textlayer.css';
 import './reader.css';
@@ -86,6 +86,7 @@ async function open() {
 
   const view = createViewport({
     aspect: book.aspect,
+    single: pdf.numPages === 1,
     onFit: (width, displayWidth) => renderer.resize(width, displayWidth) && updatePage(),
     onResize: book.update,
   });
@@ -119,5 +120,11 @@ async function open() {
 document.documentElement.lang = lang;
 renderToolbar(t);
 document.documentElement.classList.add('ready');
-if (pdfParam) open().catch((err) => fail(err.message || String(err)));
+function describe(err) {
+  if (err instanceof InvalidPDFException) return t('notPdf');
+  if (err instanceof ResponseException) return err.missing ? t('notFound') : t('serverError', err.status);
+  return err.message || String(err);
+}
+
+if (pdfParam) open().catch((err) => fail(describe(err)));
 else fail(t('noPdf'));
