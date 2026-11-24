@@ -3,7 +3,7 @@ import { MIN_PAGE_W } from './book.js';
 const ZOOM_STEPS = [1, 1.5, 2, 3];
 const STAGE_PADDING = 24;
 
-export function createViewport({ aspect, single, onFit, onResize }) {
+export function createViewport({ aspect, single, onFit, onResize, next, prev }) {
   const stage = document.getElementById('stage');
   const viewport = document.getElementById('viewport');
   const sizer = document.getElementById('sizer');
@@ -27,6 +27,7 @@ export function createViewport({ aspect, single, onFit, onResize }) {
     sizer.style.width = Math.floor(shownW * zoom) + 'px';
     sizer.style.height = Math.floor(shownH * zoom) + 'px';
     viewport.style.overflow = zoomIdx > 0 ? 'auto' : 'hidden';
+    viewport.style.touchAction = zoomIdx > 0 ? 'auto' : 'none';
     book.style.transform = zoom === 1 ? 'none' : `scale(${zoom})`;
     zoomLabel.textContent = Math.round(zoom * 100) + '%';
 
@@ -53,7 +54,13 @@ export function createViewport({ aspect, single, onFit, onResize }) {
   // StPageFlip pointer math ignores CSS scale, so zoom disables flip gestures and pans instead
   const grabsPan = (e) => zoomIdx > 0 && !e.target.closest('.textLayer span');
   let pan = null;
+  let touchEnded = -Infinity;
   viewport.addEventListener('mousedown', (e) => {
+    // browsers follow an unhandled touch with emulated mouse events, which StPageFlip would turn into a flip
+    if (e.timeStamp - touchEnded < 1000) {
+      e.stopPropagation();
+      return;
+    }
     if (!grabsPan(e)) return;
     e.stopPropagation();
     e.preventDefault();
@@ -65,8 +72,30 @@ export function createViewport({ aspect, single, onFit, onResize }) {
     viewport.scrollTop = pan.top - (e.clientY - pan.y);
   });
   window.addEventListener('mouseup', () => { pan = null; });
+  // StPageFlip ignores quick taps and springs back on swipes slower than 250 ms, so touch turns pages here
+  let touch = null;
   viewport.addEventListener('touchstart', (e) => {
+    touch = null;
     if (grabsPan(e)) e.stopPropagation();
+    if (zoomIdx > 0 || e.touches.length > 1) return;
+    const t = e.changedTouches[0];
+    touch = { x: t.clientX, y: t.clientY, time: e.timeStamp };
+    e.stopPropagation();
+  }, true);
+  viewport.addEventListener('touchend', (e) => {
+    touchEnded = e.timeStamp;
+    if (!touch) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touch.x;
+    const dy = t.clientY - touch.y;
+    const tap = Math.hypot(dx, dy) < 10 && e.timeStamp - touch.time < 500;
+    const swipe = Math.abs(dx) > 30 && Math.abs(dx) > 2 * Math.abs(dy);
+    touch = null;
+    if (!tap && !swipe) return;
+    e.preventDefault();
+    const box = viewport.getBoundingClientRect();
+    const forward = swipe ? dx < 0 : t.clientX > box.left + box.width / 2;
+    (forward ? next : prev)();
   }, true);
 
   return {

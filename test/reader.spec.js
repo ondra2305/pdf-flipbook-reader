@@ -170,6 +170,43 @@ test('explains a missing or invalid PDF', async ({ page }) => {
   await expect(page.locator('#error')).toHaveText('Error: The file is not a valid PDF.');
 });
 
+test.describe('touch', () => {
+  test.use({ viewport: { width: 390, height: 760 }, hasTouch: true, isMobile: true });
+
+  test('turns pages by tapping a side or swiping, but not by a long press', async ({ page }) => {
+    await open(page);
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type, x, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
+    const label = page.locator('#pageLabel');
+    const box = await page.locator('#viewport').boundingBox();
+    const y = box.y + box.height / 2;
+    const right = box.x + box.width - 30;
+
+    await page.touchscreen.tap(right, y);
+    await expect(label).toHaveText('2 / 14');
+    await page.waitForTimeout(900);
+
+    await touch('touchStart', right, y);
+    for (let i = 1; i <= 4; i++) {
+      await page.waitForTimeout(100);
+      await touch('touchMove', right - i * 40, y);
+    }
+    await touch('touchEnd', right - 160, y);
+    await expect(label).toHaveText('3 / 14');
+    await page.waitForTimeout(900);
+
+    await page.touchscreen.tap(box.x + 30, y);
+    await expect(label).toHaveText('2 / 14');
+    await page.waitForTimeout(900);
+
+    await touch('touchStart', right, y);
+    await page.waitForTimeout(700);
+    await touch('touchEnd', right, y);
+    await page.waitForTimeout(900);
+    await expect(label).toHaveText('2 / 14');
+  });
+});
+
 test('rejects a missing or foreign PDF', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#error')).toContainText('?pdf=');

@@ -87,6 +87,8 @@ async function open() {
   const view = createViewport({
     aspect: book.aspect,
     single: pdf.numPages === 1,
+    next: book.next,
+    prev: book.prev,
     onFit: (width, displayWidth) => renderer.resize(width, displayWidth) && updatePage(),
     onResize: book.update,
   });
