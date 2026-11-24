@@ -25,10 +25,11 @@ test('opens on the cover and flips by button and keyboard', async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
-test('renders pages with a selectable text layer', async ({ page }) => {
+test('renders a selectable text layer only for the shown spread', async ({ page }) => {
   await open(page);
   await expect.poll(() => page.evaluate(() => window.__POC_RENDERED__())).toBeGreaterThan(2);
   await expect(page.locator('.textLayer span').first()).toBeAttached();
+  await expect(page.locator('.textLayer')).toHaveCount(2);
 });
 
 test('hides the text layer of turning pages', async ({ page }) => {
@@ -107,6 +108,52 @@ test('applies URL parameters', async ({ page }) => {
   await expect(page.locator('#lang')).toHaveText('CZ');
   await expect(page.locator('#download')).toBeHidden();
   await expect(page.locator('.textLayer')).toHaveCount(0);
+});
+
+for (const [query, turning] of [['', 2], ['&mode=magazine', 1]]) {
+  test(`turns ${turning} page(s) when flipping back to the cover${query}`, async ({ page }) => {
+    await open(page, query);
+    await page.click('#next');
+    await page.waitForTimeout(1200);
+    const max = page.evaluate(() => new Promise((resolve) => {
+      let most = 0;
+      const end = performance.now() + 1200;
+      const tick = () => {
+        const shown = [...document.querySelectorAll('#book .page')]
+          .filter((el) => el.style.display === 'block' && !el.classList.contains('--simple'));
+        most = Math.max(most, shown.length);
+        if (performance.now() < end) requestAnimationFrame(tick);
+        else resolve(most);
+      };
+      requestAnimationFrame(tick);
+    }));
+    await page.click('#prev');
+    expect(await max).toBe(turning);
+  });
+}
+
+test('fits the book to the page height and zooms from the top-left corner', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 760 });
+  await open(page);
+  const book = page.locator('#book');
+  const cover = page.locator('#book .page').first();
+  expect(Math.abs((await book.boundingBox()).height - (await cover.boundingBox()).height)).toBeLessThanOrEqual(1);
+  await page.click('#zoomIn');
+  const viewport = await page.locator('#viewport').boundingBox();
+  const zoomed = await cover.boundingBox();
+  expect(zoomed.x).toBeGreaterThanOrEqual(viewport.x - 1);
+  expect(zoomed.y).toBeGreaterThanOrEqual(viewport.y - 1);
+});
+
+test('hides the unstyled page until the script has run', async ({ page }) => {
+  let release;
+  const held = new Promise((resolve) => { release = resolve; });
+  await page.route('**/src/main.js*', async (route) => { await held; await route.continue(); });
+  await page.goto(`/?pdf=${PDF}`, { waitUntil: 'commit' });
+  await expect(page.locator('body')).toBeAttached();
+  await expect(page.locator('#toolbar')).toBeHidden();
+  release();
+  await expect(page.locator('#toolbar')).toBeVisible();
 });
 
 test('rejects a missing or foreign PDF', async ({ page }) => {

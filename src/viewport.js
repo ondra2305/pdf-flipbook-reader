@@ -17,17 +17,19 @@ export function createViewport({ aspect, onFit, onResize }) {
     const availH = box.height - STAGE_PADDING;
     const pagesAcross = availW < 2 * MIN_PAGE_W ? 1 : 2;
     const shownW = Math.floor(Math.min(availW, availH * pagesAcross * aspect));
+    const pageW = shownW / pagesAcross;
+    // StPageFlip draws hard pages at top 0, so the book must not be taller than a page
+    const shownH = Math.floor(pageW / aspect);
     book.style.width = shownW + 'px';
-    book.style.height = availH + 'px';
+    book.style.height = shownH + 'px';
 
     const zoom = ZOOM_STEPS[zoomIdx];
     sizer.style.width = Math.floor(shownW * zoom) + 'px';
-    sizer.style.height = Math.floor(availH * zoom) + 'px';
+    sizer.style.height = Math.floor(shownH * zoom) + 'px';
     viewport.style.overflow = zoomIdx > 0 ? 'auto' : 'hidden';
     book.style.transform = zoom === 1 ? 'none' : `scale(${zoom})`;
     zoomLabel.textContent = Math.round(zoom * 100) + '%';
 
-    const pageW = shownW / pagesAcross;
     const density = Math.min(2.5, Math.max(2, (window.devicePixelRatio || 1) * 1.5));
     const pixelW = Math.round(pageW * zoom * density);
     onFit(Math.max(600, Math.min(zoomIdx > 0 ? 3000 : 2200, pixelW)), Math.max(120, pageW));

@@ -15,6 +15,8 @@ export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
   let displayPageW = 400;
   let generation = 0;
   const resumers = [];
+  const texts = new Map();
+  let visible = new Set();
 
   function enqueue(n, urgent) {
     if (done.has(n) || queued.has(n) || inFlight.has(n)) return;
@@ -53,9 +55,9 @@ export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
     do {
       drawnFor = generation;
       await paint(page, base, canvas);
-      if (textLayer) await drawText(page, base, canvas.parentElement);
     } while (drawnFor !== generation);
     done.add(n);
+    showText(n);
   }
 
   async function paint(page, base, canvas) {
@@ -69,19 +71,27 @@ export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
     await task.promise;
   }
 
-  async function drawText(page, base, pageEl) {
-    let layer = pageEl.querySelector('.textLayer');
-    if (!layer) {
-      layer = document.createElement('div');
-      layer.className = 'textLayer';
-      // otherwise selecting text starts a page fold
-      for (const type of ['mousedown', 'touchstart']) {
-        layer.addEventListener(type, (e) => e.stopPropagation());
-      }
-      pageEl.appendChild(layer);
+  function showText(n) {
+    if (!textLayer || texts.has(n) || !visible.has(n) || !done.has(n)) return;
+    const layer = document.createElement('div');
+    layer.className = 'textLayer';
+    // otherwise selecting text starts a page fold
+    for (const type of ['mousedown', 'touchstart']) {
+      layer.addEventListener(type, (e) => e.stopPropagation());
     }
+    canvases[n - 1].parentElement.appendChild(layer);
+    texts.set(n, layer);
+    pdf.getPage(n).then((page) => drawText(page, layer)).catch((err) => onError(n, err));
+  }
+
+  function hideText(n) {
+    texts.get(n)?.remove();
+    texts.delete(n);
+  }
+
+  async function drawText(page, layer) {
+    const base = page.getViewport({ scale: 1 });
     const scale = Math.min(displayPageW / base.width, displayPageW / aspect / base.height);
-    layer.replaceChildren();
     layer.style.setProperty('--total-scale-factor', scale);
     await new TextLayer({
       textContentSource: page.streamTextContent(),
@@ -94,11 +104,15 @@ export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
     canvases[n - 1].width = 1;
     canvases[n - 1].height = 1;
     done.delete(n);
+    hideText(n);
   }
 
   function ensureAround(index) {
     const count = canvases.length;
     const to = Math.min(count, index + 2 + LOOKAHEAD);
+    visible = new Set([index + 1, index + 2]);
+    for (const n of texts.keys()) if (!visible.has(n)) hideText(n);
+    for (const n of visible) showText(n);
     for (const n of done) if (n < index - KEEP_BEHIND || n > to) free(n);
     for (const n of [index + 1, Math.min(count, index + 2)]) enqueue(n, true);
     for (let n = Math.max(1, index - 2); n <= to; n++) enqueue(n, false);

@@ -69,7 +69,7 @@ Then `composer require ondra2305/pdf-flipbook-reader:0.1.0`. For a new release, 
 | Parameter | Default | |
 |---|---|---|
 | `pdf` | required | PDF URL, must be same origin as the reader |
-| `mode` | `magazine` | any other value keeps hard covers |
+| `mode` | `book` | `book`: stiff cover and last page, curled inner pages; `magazine`: all pages curl, but at the first and last page the old page vanishes at the end of the flip |
 | `lang` | `cs` | `en` |
 | `dl` | `1` | `0` hides the download button |
 | `tl` | `1` | `0` disables the text layer |

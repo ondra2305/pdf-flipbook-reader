@@ -60,7 +60,7 @@ async function open() {
     pageCount: pdf.numPages,
     pageWidth: first.width,
     pageHeight: first.height,
-    magazine: (params.get('mode') || 'magazine') === 'magazine',
+    magazine: params.get('mode') === 'magazine',
     onTurn: updatePage,
     onFlipping: (flipping) => {
       renderer.setPaused(flipping);
@@ -118,5 +118,6 @@ async function open() {
 
 document.documentElement.lang = lang;
 renderToolbar(t);
+document.documentElement.classList.add('ready');
 if (pdfParam) open().catch((err) => fail(err.message || String(err)));
 else fail(t('noPdf'));
