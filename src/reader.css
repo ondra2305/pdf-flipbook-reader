@@ -23,6 +23,7 @@ body {
 .stf__item { will-change: transform; }
 .textLayer { pointer-events: none; margin: auto; }
 .textLayer :is(span, br) { pointer-events: auto; }
+.stf__item:not(.--simple) .textLayer { content-visibility: hidden; }
 
 #toolbar {
   display: flex; align-items: center; justify-content: center; flex-wrap: wrap;

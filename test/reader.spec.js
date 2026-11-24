@@ -31,6 +31,16 @@ test('renders pages with a selectable text layer', async ({ page }) => {
   await expect(page.locator('.textLayer span').first()).toBeAttached();
 });
 
+test('hides the text layer of turning pages', async ({ page }) => {
+  await open(page);
+  await expect.poll(() => page.evaluate(() => window.__POC_RENDERED__())).toBeGreaterThan(2);
+  const hidden = () => page.evaluate(() => [...document.querySelectorAll('.textLayer')]
+    .filter((el) => el.parentElement.style.display !== 'none' && getComputedStyle(el).contentVisibility === 'hidden').length);
+  await page.click('#next');
+  await expect.poll(hidden, { intervals: [10] }).toBeGreaterThan(0);
+  await expect.poll(hidden).toBe(0);
+});
+
 test('zooms and resets', async ({ page }) => {
   await open(page);
   await page.click('#zoomIn');

@@ -14,6 +14,7 @@ export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
   let targetW = 800;
   let displayPageW = 400;
   let generation = 0;
+  const resumers = [];
 
   function enqueue(n, urgent) {
     if (done.has(n) || queued.has(n) || inFlight.has(n)) return;
@@ -63,7 +64,9 @@ export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: targetW / base.width }) }).promise;
+    const task = page.render({ canvasContext: ctx, viewport: page.getViewport({ scale: targetW / base.width }) });
+    task.onContinue = (resume) => (paused ? resumers.push(resume) : resume());
+    await task.promise;
   }
 
   async function drawText(page, base, pageEl) {
@@ -116,6 +119,7 @@ export function createRenderer({ pdf, canvases, aspect, textLayer, onError }) {
 
   function setPaused(value) {
     paused = value;
+    if (!paused) resumers.splice(0).forEach((resume) => resume());
     pump();
   }
 
